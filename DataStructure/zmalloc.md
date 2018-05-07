@@ -34,9 +34,10 @@ void zlibc_free(void *ptr);
 ```c
 static size_t used_memory = 0;  //全局维护的变量，以此来获取系统使用的内存大小
 static int zmalloc_thread_safe = 0;  //线程安全状态位：区分线程安全和非线程安全
-pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;  //更新使用内存时线程安全模式下的加锁变量
 ```
 **默认内存溢出函数zmalloc_default_oom()**
+当出现oom时调用此函数，函数比较简单，先向文件流写入错误信息然后刷新缓冲区，然后从调用的地方跳出。
 ```c
 static void zmalloc_default_oom(size_t size) {
     fprintf(stderr, "zmalloc: Out of memory trying to allocate %zu bytes\n",
@@ -50,9 +51,13 @@ static void zmalloc_default_oom(size_t size) {
 ```c
 
 void *zmalloc(size_t size) {
-    void *ptr = malloc(size+PREFIX_SIZE);
+    void *ptr = malloc(size+PREFIX_SIZE);  //实际还是调用malloc，不过申请的空间比size=size+PREFIX_SIZE
 
-    if (!ptr) zmalloc_oom_handler(size);
+    if (!ptr) zmalloc_oom_handler(size);  //分配失败，表示内存溢出直接调用内存溢出函数
+
+//更新使用的内存变量used_memory,不再列出代码
+//如果是线程安全模式，对变量used_memory_mutex加锁pthread_mutex_lock，然后再更新used_memory
+//如果是非线程安全模式，直接更新变量used_memory
 #ifdef HAVE_MALLOC_SIZE
     update_zmalloc_stat_alloc(zmalloc_size(ptr));
     return ptr;
@@ -67,7 +72,8 @@ void *zmalloc(size_t size) {
 **内存分配函数zcalloc()**
 ```c
 void *zcalloc(size_t size) {
-    void *ptr = calloc(1, size+PREFIX_SIZE);
+    //calloc()和malloc()参数不一样，效果是一样的，分配[size+PREFIX_SIZE]*1的空间
+    void *ptr = calloc(1, size+PREFIX_SIZE);
 
     if (!ptr) zmalloc_oom_handler(size);
 #ifdef HAVE_MALLOC_SIZE
@@ -114,6 +120,7 @@ void *zrealloc(void *ptr, size_t size) {
 ```
 
 **内存释放函数zfree()**
+内存释放函数也需要更新used_memory，和内存分配函数是相反的，就是用used_memory减去释放的内存的大小。
 ```c
 void zfree(void *ptr) {
 #ifndef HAVE_MALLOC_SIZE
