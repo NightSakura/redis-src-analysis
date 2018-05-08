@@ -37,6 +37,7 @@ static int zmalloc_thread_safe = 0;  //线程安全状态位：区分线程安�
 pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;  //更新使用内存时线程安全模式下的加锁变量
 ```
 **默认内存溢出函数zmalloc_default_oom()**
+
 当出现oom时调用此函数，函数比较简单，先向文件流写入错误信息然后刷新缓冲区，然后从调用的地方跳出。
 ```c
 static void zmalloc_default_oom(size_t size) {
@@ -120,6 +121,7 @@ void *zrealloc(void *ptr, size_t size) {
 ```
 
 **内存释放函数zfree()**
+
 内存释放函数也需要更新used_memory，和内存分配函数是相反的，就是用used_memory减去释放的内存的大小。
 ```c
 void zfree(void *ptr) {
