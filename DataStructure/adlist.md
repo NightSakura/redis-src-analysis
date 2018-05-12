@@ -1,5 +1,6 @@
 # 链表
 由于Redis使用的C语言没有内置链表的数据结构，因此Redis构建了自己的链表实现。
+## 自定义类型
 双向链表节点
 ```c
 typedef struct listNode {
@@ -36,6 +37,112 @@ typedef struct list {
     // 链表所包含的节点数量
     unsigned long len;
 } list;
+```
+## 链表和链表节点的API
+**创建新的链表listCreate()**
+```c
+list *listCreate(void)
+{
+    struct list *list;
+    // 分配内存
+    if ((list = zmalloc(sizeof(*list))) == NULL)
+        return NULL;
+    // 初始化属性
+    list->head = list->tail = NULL;
+    list->len = 0;
+    list->dup = NULL;
+    list->free = NULL;
+    list->match = NULL;
+    
+    return list;
+}
+```
+
+**释放链表listRelease()**
+```c
+void listRelease(list *list)
+{
+    unsigned long len;
+    listNode *current, *next;
+    // 指向头指针
+    current = list->head;
+    // 遍历整个链表
+    len = list->len;
+    while(len--) {
+        next = current->next;
+        // 如果有设置值释放函数，那么调用它
+        if (list->free) list->free(current->value);
+        // 释放节点结构
+        zfree(current);
+        current = next;
+    }
+    // 释放链表结构
+    zfree(list);
+}
+```
+
+**添加链表节点到表头listAddNodeHead()**
+```c
+list *listAddNodeHead(list *list, void *value)
+{
+    listNode *node;
+    // 为节点分配内存
+    if ((node = zmalloc(sizeof(*node))) == NULL)
+        return NULL;
+    // 保存值指针
+    node->value = value;
+    // 添加节点到空链表
+    if (list->len == 0) {
+        list->head = list->tail = node;
+        node->prev = node->next = NULL;
+    // 添加节点到非空链表
+    } else {
+        node->prev = NULL;
+        node->next = list->head;
+        list->head->prev = node;
+        list->head = node;
+    }
+    // 更新链表节点数
+    list->len++;
+
+    return list;
+}
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
+```
+
+****
+```c
 ```
 
 
