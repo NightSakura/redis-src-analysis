@@ -1,19 +1,26 @@
 # 链表
 由于Redis使用的C语言没有内置链表的数据结构，因此Redis构建了自己的链表实现。
-
+双向链表节点
 ```c
 typedef struct listNode {
-
     // 前置节点
     struct listNode *prev;
     // 后置节点
     struct listNode *next;
     // 节点的值
     void *value;
-
 } listNode;
 ```
-
+链表迭代器
+```c
+typedef struct listIter {
+    // 当前迭代到的节点
+    listNode *next;
+    // 迭代的方向
+    int direction;
+} listIter;
+```
+链表
 ```c
 typedef struct list {
     // 表头节点
@@ -30,3 +37,5 @@ typedef struct list {
     unsigned long len;
 } list;
 ```
+
+
