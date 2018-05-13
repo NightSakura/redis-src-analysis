@@ -44,6 +44,25 @@ Redis链表的特性可以总结如下：
 * 多态，链表节点使用void* 来保存节点值，通过list结构的dup，free，match三个属性为节点设置类型特定函数，保存不同类型的值
 
 ## 链表和链表节点的API
+表头中声明的函数如下所示。
+```c
+list *listCreate(void);
+void listRelease(list *list);
+list *listAddNodeHead(list *list, void *value);
+list *listAddNodeTail(list *list, void *value);
+list *listInsertNode(list *list, listNode *old_node, void *value, int after);
+void listDelNode(list *list, listNode *node);
+listIter *listGetIterator(list *list, int direction);
+listNode *listNext(listIter *iter);
+void listReleaseIterator(listIter *iter);
+list *listDup(list *orig);
+listNode *listSearchKey(list *list, void *key);
+listNode *listIndex(list *list, long index);
+void listRewind(list *list, listIter *li);
+void listRewindTail(list *list, listIter *li);
+void listRotate(list *list);
+```
+
 **创建新的链表listCreate()**
 
 创建成功返回list，创建失败返回NULL，时间复杂度O(1)
