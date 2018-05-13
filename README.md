@@ -5,11 +5,11 @@
 * [内存分配](DataStructure/zmalloc.md)
 * [简单动态字符串](DataStructure/sds.md)
 * [链表](DataStructure/adlist.md)
-* [字典]()
-* [跳跃表]()
-* [整数集合]()
-* [压缩列表]()
-* [对象]()
+* [字典](DataStructure/dict.md)
+* [跳跃表](DataStructure/skiplist.md)
+* [整数集合](DataStructure/intset.md)
+* [压缩列表](DataStructure/zipset.md)
+* [对象](DataStructure/object.md)
 ## 单机数据库的实现
 
 ## 多机数据库的实现
