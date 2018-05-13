@@ -45,6 +45,8 @@ Redis链表的特性可以总结如下：
 
 ## 链表和链表节点的API
 **创建新的链表listCreate()**
+
+创建成功返回list，创建失败返回NULL，时间复杂度O(1)
 ```c
 list *listCreate(void) {
     struct list *list;
@@ -63,6 +65,8 @@ list *listCreate(void) {
 ```
 
 **释放链表listRelease()**
+
+释放整个链表及所有链表节点，时间复杂度O(N)
 ```c
 void listRelease(list *list) {
     unsigned long len;
@@ -85,6 +89,9 @@ void listRelease(list *list) {
 ```
 
 **添加链表节点到表头listAddNodeHead()**
+
+如果为新节点分配内存出错，那么不执行任何动作，仅返回 NULLl；如果执行成功，返回传入的链表指针
+头插法需要判断当前链表是不是空链表，如果是，设置该节点为list->head；如果不是设置list->head->prev为插入节点
 ```c
 list *listAddNodeHead(list *list, void *value)
 {
@@ -112,20 +119,128 @@ list *listAddNodeHead(list *list, void *value)
 }
 ```
 
-****
+**添加链表节点到表尾listAddNodeTail()**
+
+如果为新节点分配内存出错，那么不执行任何动作，仅返回 NULLl；如果执行成功，返回传入的链表指针
 ```c
+list *listAddNodeTail(list *list, void *value)
+{
+    listNode *node;
+    // 为新节点分配内存
+    if ((node = zmalloc(sizeof(*node))) == NULL)
+        return NULL;
+    // 保存值指针
+    node->value = value;
+    // 目标链表为空
+    if (list->len == 0) {
+        list->head = list->tail = node;
+        node->prev = node->next = NULL;
+    // 目标链表非空
+    } else {
+        node->prev = list->tail;
+        node->next = NULL;
+        list->tail->next = node;
+        list->tail = node;
+    }
+    // 更新链表节点数
+    list->len++;
+
+    return list;
+}
 ```
 
-****
+**创建链表节点并插入链表listInsertNode()**
+
+创建一个包含值 value 的新节点，并将它插入到 old_node 的之前或之后
+如果 after 为 0 ，将新节点插入到 old_node 之前。
+如果 after 为 1 ，将新节点插入到 old_node 之后。
 ```c
+list *listInsertNode(list *list, listNode *old_node, void *value, int after) {
+    listNode *node;
+    // 创建新节点
+    if ((node = zmalloc(sizeof(*node))) == NULL)
+        return NULL;
+    // 保存值
+    node->value = value;
+    // 将新节点添加到给定节点之后
+    if (after) {
+        node->prev = old_node;
+        node->next = old_node->next;
+        // 给定节点是原表尾节点
+        if (list->tail == old_node) {
+            list->tail = node;
+        }
+    // 将新节点添加到给定节点之前
+    } else {
+        node->next = old_node;
+        node->prev = old_node->prev;
+        // 给定节点是原表头节点
+        if (list->head == old_node) {
+            list->head = node;
+        }
+    }
+    // 更新新节点的前置指针
+    if (node->prev != NULL) {
+        node->prev->next = node;
+    }
+    // 更新新节点的后置指针
+    if (node->next != NULL) {
+        node->next->prev = node;
+    }
+    // 更新链表节点数
+    list->len++;
+
+    return list;
+}
 ```
 
-****
+**删除链表节点listDelNode()**
 ```c
+void listDelNode(list *list, listNode *node)
+{
+    // 调整前置节点的指针
+    if (node->prev)
+        node->prev->next = node->next;
+    else
+        list->head = node->next;
+    // 调整后置节点的指针
+    if (node->next)
+        node->next->prev = node->prev;
+    else
+        list->tail = node->prev;
+    // 释放值
+    if (list->free) list->free(node->value);
+
+    // 释放节点
+    zfree(node);
+    // 链表数减一
+    list->len--;
+}
 ```
 
-****
+**链表创建迭代器listGetIterator()**
+
+为给定链表创建一个迭代器，之后每次对这个迭代器调用listNext,都返回被迭代到的链表节点
+direction 参数决定了迭代器的迭代方向：AL_START_HEAD ：从表头向表尾迭代；AL_START_TAIL ：从表尾想表头迭代
+时间复杂度为T = O(1)
 ```c
+listIter *listGetIterator(list *list, int direction)
+{
+    // 为迭代器分配内存
+    listIter *iter;
+    if ((iter = zmalloc(sizeof(*iter))) == NULL) return NULL;
+
+    // 根据迭代方向，设置迭代器的起始节点
+    if (direction == AL_START_HEAD)
+        iter->next = list->head;
+    else
+        iter->next = list->tail;
+
+    // 记录迭代方向
+    iter->direction = direction;
+
+    return iter;
+}
 ```
 
 ****
