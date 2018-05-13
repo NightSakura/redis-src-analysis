@@ -243,24 +243,147 @@ listIter *listGetIterator(list *list, int direction)
 }
 ```
 
-****
+**返回迭代器指向的下一节点listNext()**
+返回迭代器当前所指向的节点。删除当前节点是允许的，但不能修改链表里的其他节点。
+ 函数要么返回一个节点，要么返回 NULL
 ```c
+listNode *listNext(listIter *iter)
+{
+    listNode *current = iter->next;
+    if (current != NULL) {
+        // 根据方向选择下一个节点
+        if (iter->direction == AL_START_HEAD)
+            // 保存下一个节点，防止当前节点被删除而造成指针丢失
+            iter->next = current->next;
+        else
+            // 保存下一个节点，防止当前节点被删除而造成指针丢失
+            iter->next = current->prev;
+    }
+    return current;
+}
 ```
 
-****
+**复制整个链表listDup()**
+
+ 复制整个链表。复制成功返回输入链表的副本，如果因为内存不足而造成复制失败，返回 NULL 。
+ 如果链表有设置值复制函数dup ，那么对值的复制将使用复制函数进行， 否则，新节点将和旧节点共享同一个指针（也就是说只复制了链表结构，未复制链表节点）。
+ 无论复制是成功还是失败，输入节点都不会修改。时间复杂度T = O(N)
 ```c
+list *listDup(list *orig)
+{
+    list *copy;
+    listIter *iter;
+    listNode *node;
+    // 创建新链表
+    if ((copy = listCreate()) == NULL)
+        return NULL;
+    // 设置节点值处理函数
+    copy->dup = orig->dup;
+    copy->free = orig->free;
+    copy->match = orig->match;
+
+    // 迭代整个输入链表
+    iter = listGetIterator(orig, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        void *value;
+
+        // 复制节点值到新节点
+        if (copy->dup) {
+            value = copy->dup(node->value);
+            if (value == NULL) {
+                listRelease(copy);
+                listReleaseIterator(iter);
+                return NULL;
+            }
+        } else
+            value = node->value;
+
+        // 将节点添加到链表
+        if (listAddNodeTail(copy, value) == NULL) {
+            listRelease(copy);
+            listReleaseIterator(iter);
+            return NULL;
+        }
+    }
+    // 释放迭代器
+    listReleaseIterator(iter);
+
+    // 返回副本
+    return copy;
+}
 ```
 
-****
+**链表中查询key值的节点listSearchKey()**
+
+查找链表 list 中值和 key 匹配的节点。对比操作由链表的 match 函数负责进行，如果没有设置 match 函数，那么直接通过对比值的指针来决定是否匹配。
+如果匹配成功，那么第一个匹配的节点会被返回。如果没有匹配任何节点，那么返回 NULL 。时间复杂度为T = O(N)
 ```c
+listNode *listSearchKey(list *list, void *key)
+{
+    listIter *iter;
+    listNode *node;
+    // 迭代整个链表
+    iter = listGetIterator(list, AL_START_HEAD);
+    while((node = listNext(iter)) != NULL) {
+        // 对比
+        if (list->match) {
+            if (list->match(node->value, key)) {
+                listReleaseIterator(iter);
+                // 找到
+                return node;
+            }
+        } else {
+            if (key == node->value) {
+                listReleaseIterator(iter);
+                // 找到
+                return node;
+            }
+        }
+    }
+    listReleaseIterator(iter);
+    // 未找到
+    return NULL;
+}
 ```
 
-****
+**获取给定索引的值listIndex()**
+返回链表在给定索引上的值。索引以 0 为起始，也可以是负数， -1 表示链表最后一个节点，诸如此类。如果索引超出范围（out of range），返回 NULL 。时间复杂度T = O(N)
 ```c
+listNode *listIndex(list *list, long index) {
+    listNode *n;
+    // 如果索引为负数，从表尾开始查找
+    if (index < 0) {
+        index = (-index)-1;
+        n = list->tail;
+        while(index-- && n) n = n->prev;
+    // 如果索引为正数，从表头开始查找
+    } else {
+        n = list->head;
+        while(index-- && n) n = n->next;
+    }
+
+    return n;
+}
 ```
 
-****
+**设置表尾为表头listRotate()**
+取出链表的表尾节点，并将它移动到表头，成为新的表头节点。
 ```c
+void listRotate(list *list) {
+    listNode *tail = list->tail;
+    if (listLength(list) <= 1) return;
+    /* Detach current tail */
+    // 取出表尾节点
+    list->tail = tail->prev;
+    list->tail->next = NULL;
+
+    /* Move it as head */
+    // 插入到表头
+    list->head->prev = tail;
+    tail->prev = NULL;
+    tail->next = list->head;
+    list->head = tail;
+}
 ```
 
 
