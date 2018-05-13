@@ -1,5 +1,5 @@
 # 链表
-由于Redis使用的C语言没有内置链表的数据结构，因此Redis构建了自己的链表实现。
+由于Redis使用的C语言没有内置链表的数据结构，因此Redis构建了自己的链表实现。该链表为双向链表，可以自定义存储类型，另外可以自定义释放、拷贝、对比函数等功能，提供的操作也比较丰富，包括创建、添加、插入、删除、索引等步骤，还拥有迭代器功能。
 ## 自定义类型
 双向链表节点
 ```c
@@ -38,11 +38,15 @@ typedef struct list {
     unsigned long len;
 } list;
 ```
+Redis链表的特性可以总结如下：
+* 双端链表，链表节点带有prev和next指针，获取某节点的前置节点和后置节点的复杂度为O（1）
+* 带头尾指针和长度计数器，所以访问head和tail指针，链表中节点数量的时间复杂度为O（1）
+* 多态，链表节点使用void* 来保存节点值，通过list结构的dup，free，match三个属性为节点设置类型特定函数，保存不同类型的值
+
 ## 链表和链表节点的API
 **创建新的链表listCreate()**
 ```c
-list *listCreate(void)
-{
+list *listCreate(void) {
     struct list *list;
     // 分配内存
     if ((list = zmalloc(sizeof(*list))) == NULL)
@@ -60,8 +64,7 @@ list *listCreate(void)
 
 **释放链表listRelease()**
 ```c
-void listRelease(list *list)
-{
+void listRelease(list *list) {
     unsigned long len;
     listNode *current, *next;
     // 指向头指针
