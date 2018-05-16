@@ -34,7 +34,7 @@ void zlibc_free(void *ptr);
 ```c
 static size_t used_memory = 0;  //全局维护的变量，以此来获取系统使用的内存大小
 static int zmalloc_thread_safe = 0;  //线程安全状态位：区分线程安全和非线程安全
-pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;  //更新使用内存时线程安全模式下的加锁变量
+pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;  //初始化了一个互斥锁
 ```
 **默认内存溢出函数zmalloc_default_oom()**
 
