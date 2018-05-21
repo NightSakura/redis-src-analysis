@@ -49,6 +49,8 @@ static void zmalloc_default_oom(size_t size) {
 ```
 
 **内存分配函数zmalloc()**
+
+Redis的内存分配函数完成了空间的分配，此外还需要维护全局变量used_memory，因此每次分配释放内存都要进行更新
 ```c
 
 void *zmalloc(size_t size) {
