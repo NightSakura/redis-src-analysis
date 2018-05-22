@@ -10,7 +10,7 @@
 * [整数集合](DataStructure/intset.md)
 * [压缩列表](DataStructure/zipset.md)
 ## 命令的实现
-* [对象](DataStructure/object.md)
+* [对象](DataStructure/robj.md)
 * [字符串命令](Command/string.md)
 * [列表命令](Command/list.md)
 * [哈希命令](Command/hash.md)
