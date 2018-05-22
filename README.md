@@ -10,12 +10,12 @@
 * [整数集合](DataStructure/intset.md)
 * [压缩列表](DataStructure/zipset.md)
 ## 命令的实现
-* [对象](Command/object.md)
-* [字符串命令](Command/object.md)
-* [列表命令](Command/object.md)
-* [哈希命令](Command/object.md)
-* [集合命令](Command/object.md)
-* [有序集合命令](Command/object.md)
+* [对象](DataStructure/object.md)
+* [字符串命令](Command/string.md)
+* [列表命令](Command/list.md)
+* [哈希命令](Command/hash.md)
+* [集合命令](Command/set.md)
+* [有序集合命令](Command/zset.md)
 ## 单机数据库的实现
 
 ## 多机数据库的实现
