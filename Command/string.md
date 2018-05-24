@@ -68,6 +68,7 @@ void setCommand(redisClient *c) {
 }
 ```
 
+flags 参数的值可以是 NX 或 XX ，它们
 ```c
 void setGenericCommand(redisClient *c, int flags, robj *key, robj *val, robj *expire, int unit, robj *ok_reply, robj *abort_reply) {
 
