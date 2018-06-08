@@ -1,8 +1,8 @@
-# 事件处理
-Redis中的事件包括时间事件和文件事件，Redis为他们定义了结构体
+# 事件和网络模型
+Redis中的事件包括时间事件和文件事件，Redis为他们定义了结构体。Redis基于Reactor模式自定义了事件网络模型。
 
-
-文件事件的结构体定义如下。
+## 时间和文件事件的定义
+文件事件的结构体定义如下，读写事件处理器使用预定义的aeFileProc接口类型，监听的事件类型包括AE_READABLE，AE_WRITABLE或者AE_READABLE | AE_WRITABLE，定义时用mask字段标识。
 ```c
 typedef struct aeFileEvent {
     // 监听事件类型掩码，值可以是 AE_READABLE 或 AE_WRITABLE ，或者 AE_READABLE | AE_WRITABLE
@@ -15,14 +15,7 @@ typedef struct aeFileEvent {
     void *clientData;
 } aeFileEvent;
 ```
-文件事件的状态包括未设置、可读和可写。
-```c
-// 未设置
-#define AE_NONE 0      // 未设置
-#define AE_READABLE 1  // 可读
-#define AE_WRITABLE 2  // 可写
-```
-时间事件的结构体定义如下
+时间事件的结构体定义如下，时间事件处理器使用预定义的aeTimeProc接口类型，记录了时间的到达时间还需要的秒数和毫秒数when_sec和when_ms，并且用id唯一标识。另外，时间事件维护在一个链表中，每个时间事件还维护了一个指向下一个时间事件的指针。
 ```c
 typedef struct aeTimeEvent {
     // 时间事件的唯一标识符
@@ -39,6 +32,46 @@ typedef struct aeTimeEvent {
     // 指向下个时间事件结构，形成链表
     struct aeTimeEvent *next;
 } aeTimeEvent;
+```
+
+## 事件相关的API
+**创建文件事件**
+```c
+int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
+        aeFileProc *proc, void *clientData)
+{
+    if (fd >= eventLoop->setsize) {
+        errno = ERANGE;
+        return AE_ERR;
+    }
+
+    if (fd >= eventLoop->setsize) return AE_ERR;
+
+    // 取出文件事件结构
+    aeFileEvent *fe = &eventLoop->events[fd];
+
+    // 监听指定 fd 的指定事件
+    if (aeApiAddEvent(eventLoop, fd, mask) == -1)
+        return AE_ERR;
+
+    // 设置文件事件类型，以及事件的处理器
+    fe->mask |= mask;
+    if (mask & AE_READABLE) fe->rfileProc = proc;
+    if (mask & AE_WRITABLE) fe->wfileProc = proc;
+
+    // 私有数据
+    fe->clientData = clientData;
+
+    // 如果有需要，更新事件处理器的最大 fd
+    if (fd > eventLoop->maxfd)
+        eventLoop->maxfd = fd;
+
+    return AE_OK;
+}
+```
+
+```c
+
 ```
 
 ```c
