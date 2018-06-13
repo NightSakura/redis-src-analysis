@@ -1,4 +1,4 @@
-# redis源码分析
+# Redis源码分析
 随着对Redis的熟悉我想了解Redis实现等更多的内容，发现有很多现有的资料和方法指导，自然就站在巨人的肩膀上啦！
 
 阅读顺序上基本上是顺着黄建宏老师的《Redis设计与实现》和[这篇博客](http://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html)推荐的代码阅读顺序，另外也很感谢网易这位同学的[Redis解析系列](https://zcheng.ren/tags/Redis/page/2/)，就这样我对着源码分析看Redis的源码看看代码层面的具体的实现。坚持下来还是觉得收获颇丰，从服务器代码中去学习Reactor模式，I/O复用，设计模式等对之前学习的内容进行印证。
