@@ -30,3 +30,5 @@
 ## 多机数据库的实现
 
 ## 独立功能的实现
+* [慢查询日志](StandAlone/slowlog.md)
+* [事务](StandAlone/tansaction.md)
