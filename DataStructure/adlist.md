@@ -38,7 +38,7 @@ typedef struct list {
     unsigned long len;
 } list;
 ```
-Redis链表的特性可以总结如下：
+链表在很多系统中都有涉及，Redis的链表涉及也一样，其特性可以总结如下：
 * 双端链表，链表节点带有prev和next指针，获取某节点的前置节点和后置节点的复杂度为O（1）
 * 带头尾指针和长度计数器，所以访问head和tail指针，链表中节点数量的时间复杂度为O（1）
 * 多态，链表节点使用void* 来保存节点值，通过list结构的dup，free，match三个属性为节点设置类型特定函数，保存不同类型的值
